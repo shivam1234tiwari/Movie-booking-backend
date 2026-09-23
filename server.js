@@ -2,6 +2,7 @@ import express from "express"
 import dotenv from 'dotenv'
 import ConnectDB from "./config/db.js";
 import MovieRoute from './routes/movieRoutes.js'
+import UserRoute from './routes/userRoutes.js'
 
 dotenv.config();
 
@@ -15,6 +16,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use('/api/v1',MovieRoute);
+app.use('/api/v1',UserRoute);
 
 app.get('/', (req, res) => {
     return res.status(200).json({
