@@ -220,3 +220,24 @@ export const DeleteUser=async(req,res)=>{
     })
   }
 }
+export const profile=async(req,res)=>{
+  try{
+    const user=await User.findById(req.user.id).select("-password");
+    if(!user){
+      return res.status(404).json({
+        success:false,
+        message:"User Not Found"
+      })
+    }
+    return res.status(200).json({
+      success:true,
+      message:"User Successfully Fetched",
+      user
+    })
+  }catch(error){
+    return res.status(500).json({
+      success:false,
+      message:"Internal Server Error"
+    })
+  }
+}
