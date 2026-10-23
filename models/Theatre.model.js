@@ -1,3 +1,4 @@
+
 import mongoose from "mongoose";
 
 const theatreSchema = new mongoose.Schema(
@@ -27,8 +28,9 @@ const theatreSchema = new mongoose.Schema(
     },
 
     pincode: {
-      type: Number,
+      type: String,
       required: true,
+      trim: true,
     },
 
     status: {
