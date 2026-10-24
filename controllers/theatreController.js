@@ -65,3 +65,116 @@ export const getTheatres = async (req, res) => {
     });
   }
 };
+
+
+export const getTheatreById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const theatre = await Theatre.findById(id);
+
+    if (!theatre) {
+      return res.status(404).json({
+        success: false,
+        message: "Theatre not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      theatre,
+    });
+  } catch (error) {
+    console.log("Get Theatre By ID Error:", error);
+
+    if (error.name === "CastError") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Theatre ID",
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+
+export const updateTheatre = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const theatre = await Theatre.findByIdAndUpdate(
+      id,
+      req.body,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    if (!theatre) {
+      return res.status(404).json({
+        success: false,
+        message: "Theatre not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Theatre updated successfully",
+      theatre,
+    });
+  } catch (error) {
+    console.log("Update Theatre Error:", error);
+
+    if (error.name === "CastError") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Theatre ID",
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+
+export const deleteTheatre = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const theatre = await Theatre.findByIdAndDelete(id);
+
+    if (!theatre) {
+      return res.status(404).json({
+        success: false,
+        message: "Theatre not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Theatre deleted successfully",
+    });
+  } catch (error) {
+    console.log("Delete Theatre Error:", error);
+
+    if (error.name === "CastError") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Theatre ID",
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
