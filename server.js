@@ -4,6 +4,9 @@ import ConnectDB from "./config/db.js";
 import MovieRoute from './routes/movieRoutes.js'
 import UserRoute from './routes/userRoutes.js'
 import theatreRoute from "./routes/theatreRoute.js";
+import screenRoute from "./routes/screenRoute.js";
+import showRoute from "./routes/showRoute.js";
+
 
 dotenv.config();
 
@@ -19,6 +22,10 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/v1',MovieRoute);
 app.use('/api/v1',UserRoute);
 app.use("/api/theatre", theatreRoute);
+app.use("/api/screen", screenRoute);
+app.use("/api/show", showRoute);
+
+
 
 app.get('/', (req, res) => {
     return res.status(200).json({

@@ -1,3 +1,4 @@
+
 import mongoose from "mongoose";
 
 const screenSchema = new mongoose.Schema(
@@ -18,6 +19,10 @@ const screenSchema = new mongoose.Schema(
       type: Number,
       required: true,
       min: 1,
+      validate: {
+        validator: Number.isInteger,
+        message: "Total seats must be a positive integer",
+      },
     },
 
     screenType: {
@@ -35,6 +40,12 @@ const screenSchema = new mongoose.Schema(
   {
     timestamps: true,
   }
+);
+
+// Same theatre cannot have duplicate screen names
+screenSchema.index(
+  { theatre: 1, name: 1 },
+  { unique: true }
 );
 
 const Screen = mongoose.model("screen", screenSchema);

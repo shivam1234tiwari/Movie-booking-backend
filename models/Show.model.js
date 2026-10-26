@@ -7,49 +7,40 @@ const showSchema = new mongoose.Schema(
       ref: "movie",
       required: true,
     },
-
     theatre: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "theatre",
       required: true,
     },
-
     screen: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "screen",
       required: true,
     },
-
     showDate: {
       type: Date,
       required: true,
     },
-
     startTime: {
-      type: String,
+      type: Date,
       required: true,
     },
-
     endTime: {
-      type: String,
+      type: Date,
       required: true,
     },
-
-    ticketPrice: {
+    price: {
       type: Number,
       required: true,
-      min: 0,
+      min: 1,
     },
-
     status: {
       type: String,
-      enum: ["ACTIVE", "CANCELLED", "COMPLETED"],
-      default: "ACTIVE",
+      enum: ["SCHEDULED", "CANCELLED", "COMPLETED"],
+      default: "SCHEDULED",
     },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
 const Show = mongoose.model("show", showSchema);
