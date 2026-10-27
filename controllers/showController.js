@@ -127,6 +127,23 @@ export const createShow = async (req, res) => {
       });
     }
 
+
+    // 7. Check for overlapping shows on the same screen
+    const overlappingShow = await Show.findOne({
+      screen,
+      status: "SCHEDULED",
+      startTime: { $lt: parsedEndTime },
+      endTime: { $gt: parsedStartTime },
+    });
+
+    if (overlappingShow) {
+      return res.status(409).json({
+        success: false,
+        message: "This screen already has a show scheduled during this time",
+      });
+    }
+
+    // 8. Create show
     // 7. Create show
     const show = await Show.create({
       movie,
@@ -145,6 +162,68 @@ export const createShow = async (req, res) => {
     });
   } catch (error) {
     console.error("Create Show Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+
+export const getAllShows = async (req, res) => {
+  try {
+    const shows = await Show.find()
+      .populate("movie", "name language")
+      .populate("theatre", "name city address")
+      .populate("screen", "name totalSeats screenType")
+      .sort({ startTime: 1 });
+
+    return res.status(200).json({
+      success: true,
+      count: shows.length,
+      shows,
+    });
+  } catch (error) {
+    console.error("Get All Shows Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+
+export const getShowById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Show ID",
+      });
+    }
+
+    const show = await Show.findById(id)
+      .populate("movie", "name language")
+      .populate("theatre", "name city address")
+      .populate("screen", "name totalSeats screenType");
+
+    if (!show) {
+      return res.status(404).json({
+        success: false,
+        message: "Show not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      show,
+    });
+  } catch (error) {
+    console.error("Get Show By ID Error:", error);
 
     return res.status(500).json({
       success: false,
