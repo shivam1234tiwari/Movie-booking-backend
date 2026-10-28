@@ -231,3 +231,185 @@ export const getShowById = async (req, res) => {
     });
   }
 };
+
+
+export const updateShow = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { showDate, startTime, endTime, price } = req.body;
+
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Show ID",
+      });
+    }
+
+    const existingShow = await Show.findById(id);
+
+    if (!existingShow) {
+      return res.status(404).json({
+        success: false,
+        message: "Show not found",
+      });
+    }
+
+    if (existingShow.status !== "SCHEDULED") {
+      return res.status(400).json({
+        success: false,
+        message: "Only scheduled shows can be updated",
+      });
+    }
+
+    const updates = {};
+
+    if (price !== undefined) {
+      if (
+        typeof price !== "number" ||
+        !Number.isFinite(price) ||
+        price < 1
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Price must be a number greater than or equal to 1",
+        });
+      }
+
+      updates.price = price;
+    }
+
+    const newStart = startTime === undefined
+      ? existingShow.startTime
+      : new Date(startTime);
+
+    const newEnd = endTime === undefined
+      ? existingShow.endTime
+      : new Date(endTime);
+
+    const newDate = showDate === undefined
+      ? existingShow.showDate
+      : new Date(showDate);
+
+    if (
+      Number.isNaN(newStart.getTime()) ||
+      Number.isNaN(newEnd.getTime()) ||
+      Number.isNaN(newDate.getTime())
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid date or time",
+      });
+    }
+
+    if (newEnd <= newStart) {
+      return res.status(400).json({
+        success: false,
+        message: "End time must be after start time",
+      });
+    }
+
+    if (
+      newDate.toISOString().slice(0, 10) !==
+      newStart.toISOString().slice(0, 10)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Show date must match the start date",
+      });
+    }
+
+    const overlappingShow = await Show.findOne({
+      _id: { $ne: id },
+      screen: existingShow.screen,
+      status: "SCHEDULED",
+      startTime: { $lt: newEnd },
+      endTime: { $gt: newStart },
+    });
+
+    if (overlappingShow) {
+      return res.status(409).json({
+        success: false,
+        message: "This screen already has a show scheduled during this time",
+      });
+    }
+
+    updates.showDate = newDate;
+    updates.startTime = newStart;
+    updates.endTime = newEnd;
+
+    const updatedShow = await Show.findByIdAndUpdate(
+      id,
+      { $set: updates },
+      { new: true, runValidators: true }
+    )
+      .populate("movie", "name language")
+      .populate("theatre", "name city address")
+      .populate("screen", "name totalSeats screenType");
+
+    return res.status(200).json({
+      success: true,
+      message: "Show updated successfully",
+      show: updatedShow,
+    });
+  } catch (error) {
+    console.error("Update Show Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+
+export const cancelShow = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Show ID",
+      });
+    }
+
+    const show = await Show.findById(id);
+
+    if (!show) {
+      return res.status(404).json({
+        success: false,
+        message: "Show not found",
+      });
+    }
+
+    if (show.status === "CANCELLED") {
+      return res.status(400).json({
+        success: false,
+        message: "Show is already cancelled",
+      });
+    }
+
+    if (show.status === "COMPLETED") {
+      return res.status(400).json({
+        success: false,
+        message: "Completed shows cannot be cancelled",
+      });
+    }
+
+    show.status = "CANCELLED";
+    await show.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Show cancelled successfully",
+      show,
+    });
+  } catch (error) {
+    console.error("Cancel Show Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
